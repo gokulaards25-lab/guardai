@@ -1,66 +1,78 @@
-  GuardAI - Automated Content Moderation System
+# 🛡️ GuardAI – Content Moderation
 
-GuardAI is a real-time Machine Learning application designed to detect and flag toxic user-generated content online. It classifies text across 6 different harm categories using Natural Language Processing (NLP) and robust Machine Learning algorithms.
-
-###  Live Demo
-** [Try GuardAI Live on Vercel](https://guardai-pqwd2qw0f-aryaremanis-projects.vercel.app)** *(Note: Use the exact URL assigned to your Vercel deployment if this changes)*
+Real-time AI content moderation powered by Claude AI, deployed on Vercel.
 
 ---
 
-##  Features
-- **Real-Time Analysis**: Type or paste any text and receive instant toxicity scores.
-- **Multi-Label Classification**: Detects overlapping categories (e.g., something can be both "Obscene" and a "Threat").
-- 6 Moderation Categories Supported:
-  -  Toxic
-  -  Severe Toxic
-  -  Obscene
-  -  Threat
-  -  Insult
-  -  Identity Hate
-- **Lightweight & Fast**: Built with efficient TF-IDF extraction and Logistic Regression to run in Serverless environments with extreme low-latency.
+## 📁 Project Structure
 
-##  System Architecture
-
-* **Frontend**: HTML5, CSS3, JavaScript (Glassmorphism UI, Responsive Design)
-* **Backend**: Python 3.11 Serverless API (Hosted on Vercel Functions)
-* **Machine Learning**: `scikit-learn` (Logistic Regression using the One-Vs-Rest strategy)
-* **Feature Extraction**: TF-IDF (Term Frequency-Inverse Document Frequency)
-* **Model Serialization**: `joblib`
-
-##  Running Locally
-
-### 1. Requirements
-Make sure you have Python 3.11 installed.
-
-### 2. Setup
-Clone the repository and install the exact Python dependencies used during training:
-```bash
-git clone https://github.com/Aryaremani/guardai.git
-cd guardai
-pip install -r requirements.txt
+```
+guardai/
+├── index.html          ← Frontend UI
+├── api/
+│   └── predict.js      ← Vercel serverless function (calls Anthropic API)
+├── vercel.json         ← Vercel routing config
+├── .gitignore
+├── .env.example        ← Environment variable template
+└── README.md
 ```
 
-### 3. Run the Backend API natively
-To test the inference locally without a big server, you can use the smoke test:
+---
+
+## 🚀 Deploy to Vercel
+
+### Step 1 — Push to GitHub
+
 ```bash
-python smoke_test.py
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/YOUR_USERNAME/guardai.git
+git push -u origin main
 ```
-*(Alternatively, you can run a local HTTP server inside the `api/` or `public/` directories).*
 
-### 4. Vercel Dev Server 
-The best way to run both the frontend and the Python serverless API locally is via the Vercel CLI:
+### Step 2 — Import in Vercel
+
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Click **"Import Git Repository"**
+3. Select your `guardai` repo
+4. Leave all build settings as default (no framework needed)
+5. Click **Deploy**
+
+### Step 3 — Add your Anthropic API Key
+
+1. In Vercel dashboard → your project → **Settings** → **Environment Variables**
+2. Add:
+   - **Name:** `ANTHROPIC_API_KEY`
+   - **Value:** `sk-ant-...` (your key from [console.anthropic.com](https://console.anthropic.com))
+   - **Environment:** Production + Preview + Development
+3. Click **Save**
+4. Go to **Deployments** → click the 3-dot menu on your latest deploy → **Redeploy**
+
+---
+
+## 💻 Run Locally
+
 ```bash
-npm i -g vercel
-vercel dev
+npm i -g vercel     # install Vercel CLI once
+cp .env.example .env.local
+# edit .env.local and paste your real API key
+vercel dev          # starts at http://localhost:3000
 ```
-This will spin up a `localhost:3000` instance simulating the exact Vercel Cloud environment.
 
-##  Training Pipeline
-If you wish to re-train the model on new data:
-1. Ensure you have the Wikipedia Toxic Comments `.csv` files stored in `/data/`
-2. Run the preprocessing script: `python src/preprocess.py`
-3. Run the train script: `python src/train.py`
-4. The new `.joblib` model weights will automatically be saved to `/models/`.
+---
 
-##  License
-This project is open-source. Feel free to use and modify the code.
+## ⚙️ How It Works
+
+1. User types text → browser POSTs to `/api/predict`
+2. `/api/predict` (serverless function) forwards request to Anthropic Claude API using your **server-side** API key (never exposed to the browser)
+3. Claude returns a structured JSON moderation result
+4. Frontend renders the verdict, risk score ring, and per-category breakdown
+
+---
+
+## 🔑 Getting an Anthropic API Key
+
+1. Sign up at [console.anthropic.com](https://console.anthropic.com)
+2. Go to **API Keys** → **Create Key**
+3. Copy the key (starts with `sk-ant-`)
