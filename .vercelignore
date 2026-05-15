@@ -1,9 +1,0 @@
-# Skip heavy training data — not needed at inference time
-data/
-
-# Skip raw source training scripts
-src/train.py
-
-# Python caches
-__pycache__/
-*.pyc
