@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -15,9 +14,9 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Text exceeds 5000 character limit." });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "Server misconfiguration: API key not set." });
+    return res.status(500).json({ error: "Server misconfiguration: GROQ_API_KEY not set." });
   }
 
   const systemPrompt = `You are a content moderation AI. Analyse the given text and return a JSON object ONLY — no markdown, no explanation, no code fences.
@@ -43,30 +42,31 @@ Rules:
 - Be accurate, consistent, and strict. Return ONLY the JSON object.`;
 
   try {
-    const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "llama-3.3-70b-versatile",
         max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: `Analyse this text for toxicity:\n\n${text}` }],
+        temperature: 0,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user",   content: `Analyse this text for toxicity:\n\n${text}` }
+        ],
       }),
     });
 
-    if (!anthropicRes.ok) {
-      const err = await anthropicRes.json().catch(() => ({}));
-      return res.status(502).json({ error: err.error?.message || "Upstream API error." });
+    if (!groqRes.ok) {
+      const err = await groqRes.json().catch(() => ({}));
+      return res.status(502).json({ error: err.error?.message || "Groq API error." });
     }
 
-    const anthropicData = await anthropicRes.json();
-    const raw = anthropicData.content?.[0]?.text || "";
+    const groqData = await groqRes.json();
+    const raw = groqData.choices?.[0]?.message?.content || "";
 
-    // Strip accidental markdown fences
     const cleaned = raw.replace(/```(?:json)?/gi, "").replace(/```/g, "").trim();
     const result  = JSON.parse(cleaned);
 
